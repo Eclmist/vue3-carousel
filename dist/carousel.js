@@ -419,6 +419,7 @@
           const dragged = vue.reactive({ x: 0, y: 0 });
           const isHover = vue.ref(false);
           const isDragging = vue.ref(false);
+          let deltaXOffset = 0;
           const handleMouseEnter = () => {
               isHover.value = true;
           };
@@ -430,10 +431,17 @@
                   return;
               event.preventDefault();
               event.stopImmediatePropagation();
+              deltaXOffset = 0;
               window.clearTimeout(handleScrollTimeout);
               isDragging.value = true;
               dragged.x -= event.deltaX;
               const direction = config.dir === 'rtl' ? -1 : 1;
+              const atSlide = currentSlideIndex.value - (Math.round(dragged.x / slideWidth.value) * direction);
+              if (atSlide < 0)
+                  deltaXOffset -= slideWidth.value * slidesCount.value;
+              else if (atSlide >= slidesCount.value)
+                  deltaXOffset += slideWidth.value * slidesCount.value;
+              dragged.x = dragged.x + deltaXOffset;
               const tolerance = Math.sign(dragged.x) * config.snapThreshold;
               const draggedSlides = Math.round(dragged.x / slideWidth.value + tolerance) * direction;
               previewSlideIndex.value = currentSlideIndex.value - draggedSlides;
@@ -452,6 +460,7 @@
               if ((!isTouch && event.button !== 0) || isSliding.value) {
                   return;
               }
+              deltaXOffset = 0;
               startPosition.x = isTouch ? event.touches[0].clientX : event.clientX;
               startPosition.y = isTouch ? event.touches[0].clientY : event.clientY;
               document.addEventListener(isTouch ? 'touchmove' : 'mousemove', handleDragThrottled, true);
@@ -463,9 +472,14 @@
               endPosition.y = isTouch ? event.touches[0].clientY : event.clientY;
               const deltaX = endPosition.x - startPosition.x;
               const deltaY = endPosition.y - startPosition.y;
-              dragged.y = deltaY;
-              dragged.x = deltaX;
               const direction = config.dir === 'rtl' ? -1 : 1;
+              const atSlide = currentSlideIndex.value - (Math.round(dragged.x / slideWidth.value) * direction);
+              if (atSlide < 0)
+                  deltaXOffset -= slideWidth.value * slidesCount.value;
+              else if (atSlide >= slidesCount.value)
+                  deltaXOffset += slideWidth.value * slidesCount.value;
+              dragged.y = deltaY;
+              dragged.x = deltaX + deltaXOffset;
               const tolerance = Math.sign(dragged.x) * config.snapThreshold;
               const draggedSlides = Math.round(dragged.x / slideWidth.value + tolerance) * direction;
               previewSlideIndex.value = currentSlideIndex.value - draggedSlides;
@@ -536,6 +550,7 @@
               isSliding.value = true;
               prevSlideIndex.value = currentSlideIndex.value;
               currentSlideIndex.value = currentVal;
+              emit('update:modelValue', currentSlideIndex.value);
               transitionTimer = setTimeout(() => {
                   if (config.wrapAround) {
                       const mappedNumber = mapNumberToRange({
@@ -571,6 +586,7 @@
           vue.provide('nav', nav);
           vue.provide('isSliding', isSliding);
           vue.provide('isDragging', isDragging);
+          vue.provide('slidesCount', slidesCount);
           /**
            * Track style
            */
@@ -799,6 +815,9 @@
       return vue.h('ol', { class: 'carousel__pagination' }, children);
   };
 
+  function runningMod(a, b) {
+      return (a % b + b) % b;
+  }
   var Slide = vue.defineComponent({
       name: 'CarouselSlide',
       props: {
@@ -816,11 +835,13 @@
           const currentSlide = vue.inject('currentSlide', vue.ref(0));
           const previewSlide = vue.inject('previewSlide', vue.ref(0));
           const slidesToScroll = vue.inject('slidesToScroll', vue.ref(0));
+          const slidesCount = vue.inject('slidesCount', vue.ref(0));
           const isSliding = vue.inject('isSliding', vue.ref(false));
           const isDragging = vue.inject('isDragging', vue.ref(false));
-          const isActive = vue.computed(() => props.index === (isDragging.value ? previewSlide.value : currentSlide.value));
-          const isPrev = vue.computed(() => props.index === ((isDragging.value ? previewSlide.value : currentSlide.value) - 1));
-          const isNext = vue.computed(() => props.index === ((isDragging.value ? previewSlide.value : currentSlide.value) + 1));
+          const animationOverride = vue.inject('animationOverride', vue.ref(false));
+          const isActive = vue.computed(() => runningMod(props.index, slidesCount.value) === runningMod(isDragging.value ? previewSlide.value : currentSlide.value, slidesCount.value));
+          const isPrev = vue.computed(() => runningMod(props.index, slidesCount.value) === runningMod(isDragging.value ? previewSlide.value : currentSlide.value, slidesCount.value) - 1);
+          const isNext = vue.computed(() => runningMod(props.index, slidesCount.value) === runningMod(isDragging.value ? previewSlide.value : currentSlide.value, slidesCount.value) + 1);
           const isVisible = vue.computed(() => {
               const min = Math.floor(slidesToScroll.value);
               const max = Math.ceil(slidesToScroll.value + config.itemsToShow - 1);
@@ -838,6 +859,7 @@
                       'carousel__slide--prev': isPrev.value,
                       'carousel__slide--next': isNext.value,
                       'carousel__slide--sliding': isSliding.value || isDragging.value,
+                      'carousel__slide--animation__override': animationOverride.value,
                   },
                   'aria-hidden': !isVisible.value,
               }, (_a = slots.default) === null || _a === void 0 ? void 0 : _a.call(slots, {

@@ -1,3 +1,28 @@
+:root {
+  /* Color */
+  --vc-clr-primary: #000;
+  --vc-clr-secondary: #090f207f;
+  --vc-clr-white: #ffffff;
+
+  /* Icon */
+  --vc-icn-width: 1.2em;
+
+  /* Navigation */
+  --vc-nav-width: 30px;
+  --vc-nav-height: 30px;
+  --vc-nav-border-radius: 0;
+  --vc-nav-color: var(--vc-clr-primary);
+  --vc-nav-color-hover: var(--vc-clr-secondary);
+  --vc-nav-background: transparent;
+
+  /* Pagination */
+  --vc-pgn-width: 12px;
+  --vc-pgn-height: 4px;
+  --vc-pgn-margin: 4px;
+  --vc-pgn-border-radius: 0;
+  --vc-pgn-background-color: var(--vc-clr-secondary);
+  --vc-pgn-active-color: var(--vc-clr-primary);
+}
 .carousel {
   position: relative;
   text-align: center;
@@ -38,31 +63,6 @@
   width: var(--vc-icn-width);
   height: var(--vc-icn-width);
   fill: currentColor;
-}
-:root {
-  /* Color */
-  --vc-clr-primary: #000;
-  --vc-clr-secondary: #090f207f;
-  --vc-clr-white: #ffffff;
-
-  /* Icon */
-  --vc-icn-width: 1.2em;
-
-  /* Navigation */
-  --vc-nav-width: 30px;
-  --vc-nav-height: 30px;
-  --vc-nav-border-radius: 0;
-  --vc-nav-color: var(--vc-clr-primary);
-  --vc-nav-color-hover: var(--vc-clr-secondary);
-  --vc-nav-background: transparent;
-
-  /* Pagination */
-  --vc-pgn-width: 12px;
-  --vc-pgn-height: 4px;
-  --vc-pgn-margin: 4px;
-  --vc-pgn-border-radius: 0;
-  --vc-pgn-background-color: var(--vc-clr-secondary);
-  --vc-pgn-active-color: var(--vc-clr-primary);
 }
 .carousel__prev,
 .carousel__next {
@@ -114,19 +114,6 @@
   right: auto;
   left: 0;
 }
-.carousel__slide {
-  scroll-snap-stop: auto;
-  flex-shrink: 0;
-  margin: 0;
-  position: relative;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  /* Fix iOS scrolling #22 */
-  transform: translateZ(0);
-}
 .carousel__pagination {
   display: flex;
   justify-content: center;
@@ -157,4 +144,17 @@
 .carousel__pagination-button:hover::after,
 .carousel__pagination-button--active::after {
   background-color: var(--vc-pgn-active-color);
+}
+.carousel__slide {
+  scroll-snap-stop: auto;
+  flex-shrink: 0;
+  margin: 0;
+  position: relative;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* Fix iOS scrolling #22 */
+  transform: translateZ(0);
 }

@@ -415,6 +415,7 @@ var Carousel = defineComponent({
         const dragged = reactive({ x: 0, y: 0 });
         const isHover = ref(false);
         const isDragging = ref(false);
+        let deltaXOffset = 0;
         const handleMouseEnter = () => {
             isHover.value = true;
         };
@@ -426,10 +427,17 @@ var Carousel = defineComponent({
                 return;
             event.preventDefault();
             event.stopImmediatePropagation();
+            deltaXOffset = 0;
             window.clearTimeout(handleScrollTimeout);
             isDragging.value = true;
             dragged.x -= event.deltaX;
             const direction = config.dir === 'rtl' ? -1 : 1;
+            const atSlide = currentSlideIndex.value - (Math.round(dragged.x / slideWidth.value) * direction);
+            if (atSlide < 0)
+                deltaXOffset -= slideWidth.value * slidesCount.value;
+            else if (atSlide >= slidesCount.value)
+                deltaXOffset += slideWidth.value * slidesCount.value;
+            dragged.x = dragged.x + deltaXOffset;
             const tolerance = Math.sign(dragged.x) * config.snapThreshold;
             const draggedSlides = Math.round(dragged.x / slideWidth.value + tolerance) * direction;
             previewSlideIndex.value = currentSlideIndex.value - draggedSlides;
@@ -448,6 +456,7 @@ var Carousel = defineComponent({
             if ((!isTouch && event.button !== 0) || isSliding.value) {
                 return;
             }
+            deltaXOffset = 0;
             startPosition.x = isTouch ? event.touches[0].clientX : event.clientX;
             startPosition.y = isTouch ? event.touches[0].clientY : event.clientY;
             document.addEventListener(isTouch ? 'touchmove' : 'mousemove', handleDragThrottled, true);
@@ -459,9 +468,14 @@ var Carousel = defineComponent({
             endPosition.y = isTouch ? event.touches[0].clientY : event.clientY;
             const deltaX = endPosition.x - startPosition.x;
             const deltaY = endPosition.y - startPosition.y;
-            dragged.y = deltaY;
-            dragged.x = deltaX;
             const direction = config.dir === 'rtl' ? -1 : 1;
+            const atSlide = currentSlideIndex.value - (Math.round(dragged.x / slideWidth.value) * direction);
+            if (atSlide < 0)
+                deltaXOffset -= slideWidth.value * slidesCount.value;
+            else if (atSlide >= slidesCount.value)
+                deltaXOffset += slideWidth.value * slidesCount.value;
+            dragged.y = deltaY;
+            dragged.x = deltaX + deltaXOffset;
             const tolerance = Math.sign(dragged.x) * config.snapThreshold;
             const draggedSlides = Math.round(dragged.x / slideWidth.value + tolerance) * direction;
             previewSlideIndex.value = currentSlideIndex.value - draggedSlides;
@@ -532,6 +546,7 @@ var Carousel = defineComponent({
             isSliding.value = true;
             prevSlideIndex.value = currentSlideIndex.value;
             currentSlideIndex.value = currentVal;
+            emit('update:modelValue', currentSlideIndex.value);
             transitionTimer = setTimeout(() => {
                 if (config.wrapAround) {
                     const mappedNumber = mapNumberToRange({
@@ -567,6 +582,7 @@ var Carousel = defineComponent({
         provide('nav', nav);
         provide('isSliding', isSliding);
         provide('isDragging', isDragging);
+        provide('slidesCount', slidesCount);
         /**
          * Track style
          */
@@ -795,6 +811,9 @@ const Pagination = () => {
     return h('ol', { class: 'carousel__pagination' }, children);
 };
 
+function runningMod(a, b) {
+    return (a % b + b) % b;
+}
 var Slide = defineComponent({
     name: 'CarouselSlide',
     props: {
@@ -812,11 +831,13 @@ var Slide = defineComponent({
         const currentSlide = inject('currentSlide', ref(0));
         const previewSlide = inject('previewSlide', ref(0));
         const slidesToScroll = inject('slidesToScroll', ref(0));
+        const slidesCount = inject('slidesCount', ref(0));
         const isSliding = inject('isSliding', ref(false));
         const isDragging = inject('isDragging', ref(false));
-        const isActive = computed(() => props.index === (isDragging.value ? previewSlide.value : currentSlide.value));
-        const isPrev = computed(() => props.index === ((isDragging.value ? previewSlide.value : currentSlide.value) - 1));
-        const isNext = computed(() => props.index === ((isDragging.value ? previewSlide.value : currentSlide.value) + 1));
+        const animationOverride = inject('animationOverride', ref(false));
+        const isActive = computed(() => runningMod(props.index, slidesCount.value) === runningMod(isDragging.value ? previewSlide.value : currentSlide.value, slidesCount.value));
+        const isPrev = computed(() => runningMod(props.index, slidesCount.value) === runningMod(isDragging.value ? previewSlide.value : currentSlide.value, slidesCount.value) - 1);
+        const isNext = computed(() => runningMod(props.index, slidesCount.value) === runningMod(isDragging.value ? previewSlide.value : currentSlide.value, slidesCount.value) + 1);
         const isVisible = computed(() => {
             const min = Math.floor(slidesToScroll.value);
             const max = Math.ceil(slidesToScroll.value + config.itemsToShow - 1);
@@ -834,6 +855,7 @@ var Slide = defineComponent({
                     'carousel__slide--prev': isPrev.value,
                     'carousel__slide--next': isNext.value,
                     'carousel__slide--sliding': isSliding.value || isDragging.value,
+                    'carousel__slide--animation__override': animationOverride.value,
                 },
                 'aria-hidden': !isVisible.value,
             }, (_a = slots.default) === null || _a === void 0 ? void 0 : _a.call(slots, {

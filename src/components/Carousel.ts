@@ -181,6 +181,8 @@ export default defineComponent({
     const isHover = ref(false)
     const isDragging = ref(false)
 
+    let deltaXOffset = 0
+
     const handleMouseEnter = (): void => {
       isHover.value = true
     }
@@ -193,12 +195,24 @@ export default defineComponent({
 
       event.preventDefault()
       event.stopImmediatePropagation()
+      deltaXOffset = 0
+
 
       window.clearTimeout(handleScrollTimeout)
       isDragging.value = true
+
       dragged.x -= event.deltaX
 
       const direction = config.dir === 'rtl' ? -1 : 1
+      const atSlide = currentSlideIndex.value - (Math.round(dragged.x / slideWidth.value) * direction)
+
+      if (atSlide < 0)
+        deltaXOffset -= slideWidth.value * slidesCount.value;
+      else if (atSlide >= slidesCount.value)
+        deltaXOffset += slideWidth.value * slidesCount.value;
+
+      dragged.x = dragged.x + deltaXOffset;
+
       const tolerance = Math.sign(dragged.x) * config.snapThreshold
       const draggedSlides = Math.round(dragged.x / slideWidth.value + tolerance) * direction
       previewSlideIndex.value = currentSlideIndex.value - draggedSlides
@@ -222,6 +236,7 @@ export default defineComponent({
         return
       }
 
+      deltaXOffset = 0
       startPosition.x = isTouch ? event.touches[0].clientX : event.clientX
       startPosition.y = isTouch ? event.touches[0].clientY : event.clientY
 
@@ -236,11 +251,18 @@ export default defineComponent({
       endPosition.y = isTouch ? event.touches[0].clientY : event.clientY
       const deltaX = endPosition.x - startPosition.x
       const deltaY = endPosition.y - startPosition.y
+      const direction = config.dir === 'rtl' ? -1 : 1
+
+      const atSlide = currentSlideIndex.value - (Math.round(dragged.x / slideWidth.value) * direction)
+
+      if (atSlide < 0)
+        deltaXOffset -= slideWidth.value * slidesCount.value;
+      else if (atSlide >= slidesCount.value)
+        deltaXOffset += slideWidth.value * slidesCount.value;
 
       dragged.y = deltaY
-      dragged.x = deltaX
+      dragged.x = deltaX + deltaXOffset;
 
-      const direction = config.dir === 'rtl' ? -1 : 1
       const tolerance = Math.sign(dragged.x) * config.snapThreshold;
       const draggedSlides = Math.round(dragged.x / slideWidth.value + tolerance) * direction
       previewSlideIndex.value = currentSlideIndex.value - draggedSlides
@@ -331,6 +353,7 @@ export default defineComponent({
       isSliding.value = true
       prevSlideIndex.value = currentSlideIndex.value
       currentSlideIndex.value = currentVal
+      emit('update:modelValue', currentSlideIndex.value)
 
       transitionTimer = setTimeout((): void => {
         if (config.wrapAround) {
@@ -372,6 +395,7 @@ export default defineComponent({
     provide('nav', nav)
     provide('isSliding', isSliding)
     provide('isDragging', isDragging)
+    provide('slidesCount', slidesCount)
 
     /**
      * Track style
