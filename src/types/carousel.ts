@@ -26,6 +26,7 @@ export interface CarouselConfig {
   pauseAutoplayOnHover?: boolean
   mouseDrag?: boolean
   touchDrag?: boolean
+  snapThreshold: number
   dir?: Dir
   breakpoints?: Breakpoints
   settings?: Partial<CarouselConfig>

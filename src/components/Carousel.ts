@@ -49,9 +49,11 @@ export default defineComponent({
 
     // carousel
     let handleDragThrottled: (this: Document, ev: MouseEvent | TouchEvent) => any;
+    let handleScrollTimeout: any;
 
     // slides
     const currentSlideIndex = ref(props.modelValue ?? 0)
+    const previewSlideIndex = ref(0)
     const prevSlideIndex = ref(0)
     const middleSlideIndex = ref(0)
     const maxSlideIndex = ref(0)
@@ -63,6 +65,7 @@ export default defineComponent({
     provide('config', config)
     provide('slidesCount', slidesCount)
     provide('currentSlide', currentSlideIndex)
+    provide('previewSlide', previewSlideIndex)
     provide('maxSlide', maxSlideIndex)
     provide('minSlide', minSlideIndex)
     provide('slideWidth', slideWidth)
@@ -184,6 +187,26 @@ export default defineComponent({
     const handleMouseLeave = (): void => {
       isHover.value = false
     }
+    const handleTrackpadScroll = (event: WheelEvent): void => {
+      if (Math.abs(event.deltaX) < Math.abs(event.deltaY))
+        return
+
+      event.preventDefault()
+      event.stopImmediatePropagation()
+
+      window.clearTimeout(handleScrollTimeout)
+      isDragging.value = true
+      dragged.x -= event.deltaX
+
+      const direction = config.dir === 'rtl' ? -1 : 1
+      const tolerance = Math.sign(dragged.x) * config.snapThreshold
+      const draggedSlides = Math.round(dragged.x / slideWidth.value + tolerance) * direction
+      previewSlideIndex.value = currentSlideIndex.value - draggedSlides
+
+      handleScrollTimeout = setTimeout(function() {
+        handleDragEnd();
+      }, 150);
+    }
 
     function handleDragStart(event: MouseEvent & TouchEvent): void {
       if (
@@ -216,11 +239,16 @@ export default defineComponent({
 
       dragged.y = deltaY
       dragged.x = deltaX
+
+      const direction = config.dir === 'rtl' ? -1 : 1
+      const tolerance = Math.sign(dragged.x) * config.snapThreshold;
+      const draggedSlides = Math.round(dragged.x / slideWidth.value + tolerance) * direction
+      previewSlideIndex.value = currentSlideIndex.value - draggedSlides
     }
 
     function handleDragEnd(): void {
       const direction = config.dir === 'rtl' ? -1 : 1
-      const tolerance = Math.sign(dragged.x) * 0.4
+      const tolerance = Math.sign(dragged.x) * config.snapThreshold
       const draggedSlides =
         Math.round(dragged.x / slideWidth.value + tolerance) * direction
 
@@ -286,7 +314,10 @@ export default defineComponent({
             min: minSlideIndex.value,
           })
 
-      if (currentSlideIndex.value === currentVal || isSliding.value) {
+      // if (currentSlideIndex.value === currentVal)
+      // return
+
+      if (isSliding.value) {
         return
       }
 
@@ -340,6 +371,7 @@ export default defineComponent({
     const nav: CarouselNav = { slideTo, next, prev }
     provide('nav', nav)
     provide('isSliding', isSliding)
+    provide('isDragging', isDragging)
 
     /**
      * Track style
@@ -433,6 +465,13 @@ export default defineComponent({
       )
       let output = slidesElements
       if (config.wrapAround) {
+        const slidesBeforeBefore = slidesElements.map((el: VNode, index: number) =>
+          cloneVNode(el, {
+            index: -slidesElements.length -slidesElements.length + index,
+            isClone: true,
+            key: `clone-before-${index}`,
+          })
+        )
         const slidesBefore = slidesElements.map((el: VNode, index: number) =>
           cloneVNode(el, {
             index: -slidesElements.length + index,
@@ -447,6 +486,14 @@ export default defineComponent({
             key: `clone-after-${index}`,
           })
         )
+        const slidesAfterAfter = slidesElements.map((el: VNode, index: number) =>
+          cloneVNode(el, {
+            index: slidesElements.length + slidesElements.length + index,
+            isClone: true,
+            key: `clone-before-${index}`,
+          })
+        )
+        // output = [...slidesBeforeBefore, ...slidesBefore, ...slidesElements, ...slidesAfter, ...slidesAfterAfter]
         output = [...slidesBefore, ...slidesElements, ...slidesAfter]
       }
 
@@ -481,6 +528,7 @@ export default defineComponent({
           tabindex: '0',
           onMouseenter: handleMouseEnter,
           onMouseleave: handleMouseLeave,
+          onWheel: handleTrackpadScroll,
         },
         [viewPortEl, addonsElements, h(ARIAComponent)]
       )

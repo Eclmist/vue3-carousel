@@ -29,6 +29,7 @@ interface CarouselConfig {
   pauseAutoplayOnHover?: boolean
   mouseDrag?: boolean
   touchDrag?: boolean
+  snapThreshold: number
   dir?: Dir
   breakpoints?: Breakpoints
   settings?: Partial<CarouselConfig>
@@ -83,6 +84,10 @@ declare const _default$1: vue.DefineComponent<{
     touchDrag: {
         default: boolean | undefined;
         type: BooleanConstructor;
+    };
+    snapThreshold: {
+        default: number;
+        type: NumberConstructor;
     };
     dir: {
         default: Dir | undefined;
@@ -157,6 +162,10 @@ declare const _default$1: vue.DefineComponent<{
         default: boolean | undefined;
         type: BooleanConstructor;
     };
+    snapThreshold: {
+        default: number;
+        type: NumberConstructor;
+    };
     dir: {
         default: Dir | undefined;
         validator(value: string): boolean;
@@ -192,6 +201,7 @@ declare const _default$1: vue.DefineComponent<{
     modelValue: number;
     mouseDrag: boolean;
     touchDrag: boolean;
+    snapThreshold: number;
     dir: "rtl" | "ltr";
     i18n: Record<string, any>;
     settings: Record<string, any>;

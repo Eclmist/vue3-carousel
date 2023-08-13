@@ -64,6 +64,10 @@ export const carouselProps = {
     default: defaultConfigs.touchDrag,
     type: Boolean,
   },
+  snapThreshold: {
+    default: defaultConfigs.snapThreshold,
+    type: Number,
+  },
   // control snap position alignment
   dir: {
     default: defaultConfigs.dir,

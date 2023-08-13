@@ -18,17 +18,19 @@ export default defineComponent({
   setup(props, { slots }: SetupContext) {
     const config: CarouselConfig = inject('config', reactive({ ...defaultConfigs }))
     const currentSlide = inject('currentSlide', ref(0))
+    const previewSlide = inject('previewSlide', ref(0))
     const slidesToScroll = inject('slidesToScroll', ref(0))
     const isSliding = inject('isSliding', ref(false))
+    const isDragging = inject('isDragging', ref(false))
 
     const isActive: ComputedRef<boolean> = computed(
-      () => props.index === currentSlide.value
+      () => props.index === (isDragging.value ? previewSlide.value : currentSlide.value)
     )
     const isPrev: ComputedRef<boolean> = computed(
-      () => props.index === currentSlide.value - 1
+      () => props.index === ((isDragging.value ? previewSlide.value : currentSlide.value) - 1)
     )
     const isNext: ComputedRef<boolean> = computed(
-      () => props.index === currentSlide.value + 1
+      () => props.index === ((isDragging.value ? previewSlide.value : currentSlide.value) + 1)
     )
     const isVisible: ComputedRef<boolean> = computed(() => {
       const min = Math.floor(slidesToScroll.value)
@@ -49,7 +51,7 @@ export default defineComponent({
             'carousel__slide--active': isActive.value,
             'carousel__slide--prev': isPrev.value,
             'carousel__slide--next': isNext.value,
-            'carousel__slide--sliding': isSliding.value,
+            'carousel__slide--sliding': isSliding.value || isDragging.value,
           },
           'aria-hidden': !isVisible.value,
         },

@@ -12,6 +12,7 @@ export const defaultConfigs: CarouselConfig = {
   pauseAutoplayOnHover: false,
   mouseDrag: true,
   touchDrag: true,
+  snapThreshold: 0.4,
   dir: 'ltr',
   breakpoints: undefined,
   i18n: {
