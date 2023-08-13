@@ -47,6 +47,9 @@ export default defineComponent({
     // breakpoints configs
     let breakpoints: Breakpoints | undefined
 
+    // carousel
+    let handleDragThrottled: (this: Document, ev: MouseEvent | TouchEvent) => any;
+
     // slides
     const currentSlideIndex = ref(props.modelValue ?? 0)
     const prevSlideIndex = ref(0)
@@ -144,6 +147,8 @@ export default defineComponent({
       // Overcome some edge cases
       setTimeout(() => updateSlideWidth(), 1000)
 
+      handleDragThrottled = throttle(handleDragging, config.throttle);
+
       updateBreakpointsConfigs()
       initAutoplay()
       window.addEventListener('resize', handleWindowResize, { passive: true })
@@ -197,11 +202,11 @@ export default defineComponent({
       startPosition.x = isTouch ? event.touches[0].clientX : event.clientX
       startPosition.y = isTouch ? event.touches[0].clientY : event.clientY
 
-      document.addEventListener(isTouch ? 'touchmove' : 'mousemove', handleDragging, true)
+      document.addEventListener(isTouch ? 'touchmove' : 'mousemove', handleDragThrottled, true)
       document.addEventListener(isTouch ? 'touchend' : 'mouseup', handleDragEnd, true)
     }
 
-    const handleDragging = throttle((event: MouseEvent & TouchEvent): void => {
+    const handleDragging = (event: MouseEvent & TouchEvent): void => {
       isDragging.value = true
 
       endPosition.x = isTouch ? event.touches[0].clientX : event.clientX
@@ -211,7 +216,7 @@ export default defineComponent({
 
       dragged.y = deltaY
       dragged.x = deltaX
-    }, config.throttle)
+    }
 
     function handleDragEnd(): void {
       const direction = config.dir === 'rtl' ? -1 : 1
@@ -236,7 +241,7 @@ export default defineComponent({
       isDragging.value = false
       document.removeEventListener(
         isTouch ? 'touchmove' : 'mousemove',
-        handleDragging,
+        handleDragThrottled,
         true
       )
       document.removeEventListener(isTouch ? 'touchend' : 'mouseup', handleDragEnd, true)
