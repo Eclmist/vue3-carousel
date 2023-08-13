@@ -353,6 +353,7 @@ export default defineComponent({
       isSliding.value = true
       prevSlideIndex.value = currentSlideIndex.value
       currentSlideIndex.value = currentVal
+      previewSlideIndex.value = currentVal
       emit('update:modelValue', currentSlideIndex.value)
 
       transitionTimer = setTimeout((): void => {

@@ -23,6 +23,11 @@
   --vc-pgn-background-color: var(--vc-clr-secondary);
   --vc-pgn-active-color: var(--vc-clr-primary);
 }
+.carousel__icon {
+  width: var(--vc-icn-width);
+  height: var(--vc-icn-width);
+  fill: currentColor;
+}
 .carousel {
   position: relative;
   text-align: center;
@@ -58,11 +63,6 @@
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   border: 0;
-}
-.carousel__icon {
-  width: var(--vc-icn-width);
-  height: var(--vc-icn-width);
-  fill: currentColor;
 }
 .carousel__prev,
 .carousel__next {

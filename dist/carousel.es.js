@@ -1,5 +1,5 @@
 /**
- * Vue 3 Carousel 0.3.1
+ * Vue 3 Carousel 0.3.2
  * (c) 2023
  * @license MIT
  */
@@ -546,6 +546,7 @@ var Carousel = defineComponent({
             isSliding.value = true;
             prevSlideIndex.value = currentSlideIndex.value;
             currentSlideIndex.value = currentVal;
+            previewSlideIndex.value = currentVal;
             emit('update:modelValue', currentSlideIndex.value);
             transitionTimer = setTimeout(() => {
                 if (config.wrapAround) {
@@ -785,10 +786,11 @@ const Pagination = () => {
     const config = inject('config', reactive(Object.assign({}, defaultConfigs)));
     const maxSlide = inject('maxSlide', ref(1));
     const minSlide = inject('minSlide', ref(1));
-    const currentSlide = inject('currentSlide', ref(1));
+    inject('currentSlide', ref(1));
+    const previewSlide = inject('previewSlide', ref(1));
     const nav = inject('nav', {});
     const isActive = (slide) => mapNumberToRange({
-        val: currentSlide.value,
+        val: previewSlide.value,
         max: maxSlide.value,
         min: 0,
     }) === slide;
