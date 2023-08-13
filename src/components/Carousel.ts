@@ -213,8 +213,7 @@ export default defineComponent({
 
       dragged.x = dragged.x + deltaXOffset;
 
-      const tolerance = Math.sign(dragged.x) * config.snapThreshold
-      const draggedSlides = Math.round(dragged.x / slideWidth.value + tolerance) * direction
+      const draggedSlides = Math.round(dragged.x / slideWidth.value) * direction
       previewSlideIndex.value = currentSlideIndex.value - draggedSlides
 
       handleScrollTimeout = setTimeout(function() {
@@ -263,8 +262,7 @@ export default defineComponent({
       dragged.y = deltaY
       dragged.x = deltaX + deltaXOffset;
 
-      const tolerance = Math.sign(dragged.x) * config.snapThreshold;
-      const draggedSlides = Math.round(dragged.x / slideWidth.value + tolerance) * direction
+      const draggedSlides = Math.round(dragged.x / slideWidth.value) * direction
       previewSlideIndex.value = currentSlideIndex.value - draggedSlides
     }
 
@@ -306,7 +304,7 @@ export default defineComponent({
       }
 
       autoplayTimer = setInterval(() => {
-        if (config.pauseAutoplayOnHover && isHover.value) {
+        if (config.pauseAutoplayOnHover && (isHover.value || isDragging.value)) {
           return
         }
 

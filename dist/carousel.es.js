@@ -438,8 +438,7 @@ var Carousel = defineComponent({
             else if (atSlide >= slidesCount.value)
                 deltaXOffset += slideWidth.value * slidesCount.value;
             dragged.x = dragged.x + deltaXOffset;
-            const tolerance = Math.sign(dragged.x) * config.snapThreshold;
-            const draggedSlides = Math.round(dragged.x / slideWidth.value + tolerance) * direction;
+            const draggedSlides = Math.round(dragged.x / slideWidth.value) * direction;
             previewSlideIndex.value = currentSlideIndex.value - draggedSlides;
             handleScrollTimeout = setTimeout(function () {
                 handleDragEnd();
@@ -476,14 +475,12 @@ var Carousel = defineComponent({
                 deltaXOffset += slideWidth.value * slidesCount.value;
             dragged.y = deltaY;
             dragged.x = deltaX + deltaXOffset;
-            const tolerance = Math.sign(dragged.x) * config.snapThreshold;
-            const draggedSlides = Math.round(dragged.x / slideWidth.value + tolerance) * direction;
+            const draggedSlides = Math.round(dragged.x / slideWidth.value) * direction;
             previewSlideIndex.value = currentSlideIndex.value - draggedSlides;
         };
         function handleDragEnd() {
             const direction = config.dir === 'rtl' ? -1 : 1;
-            const tolerance = Math.sign(dragged.x) * config.snapThreshold;
-            const draggedSlides = Math.round(dragged.x / slideWidth.value + tolerance) * direction;
+            const draggedSlides = Math.round(dragged.x / slideWidth.value + Math.sign(dragged.x) * config.snapThreshold) * direction;
             // Prevent clicking if there is clicked slides
             if (draggedSlides && !isTouch) {
                 const captureClick = (e) => {
@@ -507,7 +504,7 @@ var Carousel = defineComponent({
                 return;
             }
             autoplayTimer = setInterval(() => {
-                if (config.pauseAutoplayOnHover && isHover.value) {
+                if (config.pauseAutoplayOnHover && (isHover.value || isDragging.value)) {
                     return;
                 }
                 next();
