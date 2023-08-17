@@ -59,11 +59,6 @@
   clip: rect(0, 0, 0, 0);
   border: 0;
 }
-.carousel__icon {
-  width: var(--vc-icn-width);
-  height: var(--vc-icn-width);
-  fill: currentColor;
-}
 .carousel__prev,
 .carousel__next {
   box-sizing: content-box;
@@ -144,6 +139,11 @@
 .carousel__pagination-button:hover::after,
 .carousel__pagination-button--active::after {
   background-color: var(--vc-pgn-active-color);
+}
+.carousel__icon {
+  width: var(--vc-icn-width);
+  height: var(--vc-icn-width);
+  fill: currentColor;
 }
 .carousel__slide {
   scroll-snap-stop: auto;

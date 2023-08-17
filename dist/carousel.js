@@ -484,7 +484,10 @@
           };
           function handleDragEnd() {
               const direction = config.dir === 'rtl' ? -1 : 1;
-              const draggedSlides = Math.round(dragged.x / slideWidth.value + Math.sign(dragged.x) * config.snapThreshold) * direction;
+              const sign = Math.sign(dragged.x - deltaXOffset);
+              const tolerance = sign * config.snapThreshold;
+              const draggedSlides = Math.round(dragged.x / slideWidth.value + tolerance) * direction;
+              const finalSlideIndex = currentSlideIndex.value - draggedSlides;
               // Prevent clicking if there is clicked slides
               if (draggedSlides && !isTouch) {
                   const captureClick = (e) => {
@@ -493,7 +496,7 @@
                   };
                   window.addEventListener('click', captureClick, true);
               }
-              slideTo(currentSlideIndex.value - draggedSlides);
+              slideTo(finalSlideIndex);
               dragged.x = 0;
               dragged.y = 0;
               isDragging.value = false;
